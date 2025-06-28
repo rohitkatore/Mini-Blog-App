@@ -40,7 +40,10 @@ const initialBlogs = [
   },
 ];
 
-// Initialize localStorage with initial data if it doesn't exist
+/**
+ * Initialize localStorage with initial data if it doesn't exist
+ * @returns {Array} The blogs from storage or initial data
+ */
 const initializeStorage = () => {
   const existingBlogs = localStorage.getItem(STORAGE_KEY);
   if (!existingBlogs) {
@@ -50,7 +53,10 @@ const initializeStorage = () => {
   return JSON.parse(existingBlogs);
 };
 
-// Get all blogs from localStorage
+/**
+ * Get all blogs from localStorage
+ * @returns {Array} Array of blog objects
+ */
 export const getBlogs = () => {
   const blogs = localStorage.getItem(STORAGE_KEY);
   if (!blogs) {
@@ -59,13 +65,21 @@ export const getBlogs = () => {
   return JSON.parse(blogs);
 };
 
-// Get a single blog by ID
+/**
+ * Get a single blog by ID
+ * @param {number} id - The blog ID to retrieve
+ * @returns {Object|undefined} The blog object or undefined if not found
+ */
 export const getBlogById = (id) => {
   const blogs = getBlogs();
   return blogs.find((blog) => blog.id === parseInt(id));
 };
 
-// Add a new blog
+/**
+ * Add a new blog
+ * @param {Object} blog - The blog data to add
+ * @returns {Object} The new blog with generated ID
+ */
 export const addBlog = (blog) => {
   const blogs = getBlogs();
   // Generate a new ID
@@ -83,7 +97,12 @@ export const addBlog = (blog) => {
   return newBlog;
 };
 
-// Update an existing blog
+/**
+ * Update an existing blog
+ * @param {number} id - The ID of the blog to update
+ * @param {Object} updatedBlog - The updated blog data
+ * @returns {Object|null} The updated blog or null if not found
+ */
 export const updateBlog = (id, updatedBlog) => {
   const blogs = getBlogs();
   const index = blogs.findIndex((blog) => blog.id === parseInt(id));
@@ -96,7 +115,11 @@ export const updateBlog = (id, updatedBlog) => {
   return null;
 };
 
-// Delete a blog by ID
+/**
+ * Delete a blog by ID
+ * @param {number} id - The ID of the blog to delete
+ * @returns {Array} The updated blogs array
+ */
 export const deleteBlog = (id) => {
   const blogs = getBlogs();
   const filteredBlogs = blogs.filter((blog) => blog.id !== parseInt(id));
