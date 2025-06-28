@@ -12,17 +12,35 @@ import {
 } from "lucide-react";
 import { getBlogs } from "../utils/storage";
 
+/**
+ * Home component - Main page displaying blog listings
+ * @returns {JSX.Element} Home component
+ */
 function Home() {
-  // Get blogs from localStorage
+  // State management
   const [blogs, setBlogs] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredBlogs, setFilteredBlogs] = useState([]);
   const [activeCategory, setActiveCategory] = useState("All");
 
+  /**
+   * Categories used for filtering
+   * @constant {Array}
+   */
+  const CATEGORIES = [
+    "All",
+    "Technology",
+    "Design",
+    "Travel",
+    "Health",
+    "Business",
+  ];
+
   // Load blogs from localStorage
   useEffect(() => {
     const storedBlogs = getBlogs();
     setBlogs(storedBlogs);
+    setFilteredBlogs(storedBlogs);
   }, []);
 
   // Filter blogs based on search term and category
@@ -31,12 +49,13 @@ function Home() {
 
     // Filter by search term
     if (searchTerm) {
+      const searchTermLower = searchTerm.toLowerCase();
       results = results.filter(
         (blog) =>
-          blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          blog.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          blog.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          blog.category.toLowerCase().includes(searchTerm.toLowerCase())
+          blog.title.toLowerCase().includes(searchTermLower) ||
+          blog.content.toLowerCase().includes(searchTermLower) ||
+          blog.author.toLowerCase().includes(searchTermLower) ||
+          blog.category.toLowerCase().includes(searchTermLower)
       );
     }
 
@@ -50,14 +69,25 @@ function Home() {
     setFilteredBlogs(results);
   }, [searchTerm, blogs, activeCategory]);
 
-  // Get content snippet (first 100 characters)
+  /**
+   * Get content snippet (first 100 characters)
+   * @param {string} content - The full content text
+   * @returns {string} Truncated content with ellipsis if needed
+   */
   const getSnippet = (content) => {
-    return content.length > 100 ? content.substring(0, 100) + "..." : content;
+    const MAX_SNIPPET_LENGTH = 100;
+    return content.length > MAX_SNIPPET_LENGTH
+      ? content.substring(0, MAX_SNIPPET_LENGTH) + "..."
+      : content;
   };
 
-  // Get category color
+  /**
+   * Get category-specific styling
+   * @param {string} category - The blog category
+   * @returns {string} CSS classes for the category badge
+   */
   const getCategoryColor = (category) => {
-    const colors = {
+    const categoryColors = {
       technology: "bg-blue-100 text-blue-800",
       design: "bg-purple-100 text-purple-800",
       travel: "bg-green-100 text-green-800",
@@ -71,12 +101,12 @@ function Home() {
       other: "bg-gray-100 text-gray-800",
     };
 
-    return colors[category.toLowerCase()] || colors.other;
+    return categoryColors[category.toLowerCase()] || categoryColors.other;
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Header Section - Enhanced */}
+      {/* Header Section */}
       <header className="pt-10 pb-12 px-4 relative overflow-hidden">
         <div className="absolute inset-0 bg-blue-600 opacity-5 z-0"></div>
         <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-blue-200 opacity-20 z-0"></div>
@@ -121,16 +151,9 @@ function Home() {
             </div>
           </div>
 
-          {/* Enhanced Categories Navigation */}
+          {/* Categories Navigation */}
           <div className="flex flex-wrap gap-2 mb-6 mt-8 justify-center md:justify-start">
-            {[
-              "All",
-              "Technology",
-              "Design",
-              "Travel",
-              "Health",
-              "Business",
-            ].map((category) => (
+            {CATEGORIES.map((category) => (
               <button
                 key={category}
                 onClick={() => setActiveCategory(category)}
@@ -155,7 +178,7 @@ function Home() {
         </div>
       </header>
 
-      {/* Blog List Section - Enhanced */}
+      {/* Blog List Section */}
       <main className="max-w-7xl mx-auto px-4 pb-20">
         {filteredBlogs.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100">
@@ -323,7 +346,7 @@ function Home() {
         )}
       </main>
 
-      {/* Simple footer */}
+      {/* Footer */}
       <footer className="bg-white border-t border-gray-200 py-6 mt-8">
         <div className="max-w-7xl mx-auto px-4 text-center text-gray-600 text-sm">
           <p>

@@ -15,6 +15,10 @@ import {
 } from "lucide-react";
 import { getBlogById, getBlogs } from "../utils/storage";
 
+/**
+ * ViewBlog component - Displays a single blog post
+ * @returns {JSX.Element} ViewBlog component
+ */
 function ViewBlog() {
   const { id } = useParams();
   const [blog, setBlog] = useState(null);
@@ -22,44 +26,86 @@ function ViewBlog() {
   const [nextPrev, setNextPrev] = useState({ next: null, prev: null });
   const [copied, setCopied] = useState(false);
 
+  // Fetch blog data on component mount or id change
   useEffect(() => {
-    // Get blog from localStorage
     const fetchBlog = () => {
       setLoading(true);
+
+      // Simulate API delay
       setTimeout(() => {
-        const allBlogs = getBlogs();
-        const foundBlog = getBlogById(parseInt(id));
-        setBlog(foundBlog);
+        try {
+          const allBlogs = getBlogs();
+          const foundBlog = getBlogById(parseInt(id, 10));
+          setBlog(foundBlog);
 
-        // Find next and previous blogs for navigation
-        if (foundBlog) {
-          const currentIndex = allBlogs.findIndex((b) => b.id === foundBlog.id);
-          setNextPrev({
-            prev: currentIndex > 0 ? allBlogs[currentIndex - 1] : null,
-            next:
-              currentIndex < allBlogs.length - 1
-                ? allBlogs[currentIndex + 1]
-                : null,
-          });
+          // Find next and previous blogs for navigation
+          if (foundBlog) {
+            const currentIndex = allBlogs.findIndex(
+              (b) => b.id === foundBlog.id
+            );
+            setNextPrev({
+              prev: currentIndex > 0 ? allBlogs[currentIndex - 1] : null,
+              next:
+                currentIndex < allBlogs.length - 1
+                  ? allBlogs[currentIndex + 1]
+                  : null,
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching blog:", error);
+        } finally {
+          setLoading(false);
         }
-
-        setLoading(false);
       }, 300);
     };
 
     fetchBlog();
   }, [id]);
 
+  /**
+   * Copy current URL to clipboard for sharing
+   */
   const shareUrl = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error("Failed to copy URL:", error);
+    }
   };
 
-  // Format date to be more readable
+  /**
+   * Format date to be more readable
+   * @param {string} dateString - ISO date string
+   * @returns {string} Formatted date
+   */
   const formatDate = (dateString) => {
     const options = { year: "numeric", month: "long", day: "numeric" };
     return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
+  /**
+   * Function to get category color
+   * @param {string} category - Blog category
+   * @returns {string} CSS classes for category styling
+   */
+  const getCategoryColor = (category) => {
+    const colors = {
+      technology: "bg-blue-100 text-blue-800",
+      design: "bg-purple-100 text-purple-800",
+      travel: "bg-green-100 text-green-800",
+      health: "bg-red-100 text-red-800",
+      business: "bg-amber-100 text-amber-800",
+      food: "bg-emerald-100 text-emerald-800",
+      lifestyle: "bg-pink-100 text-pink-800",
+      fashion: "bg-indigo-100 text-indigo-800",
+      education: "bg-cyan-100 text-cyan-800",
+      sports: "bg-orange-100 text-orange-800",
+      other: "bg-gray-100 text-gray-800",
+    };
+
+    return colors[category?.toLowerCase()] || colors.other;
   };
 
   // Function to render markdown-like content with proper formatting
@@ -146,25 +192,6 @@ function ViewBlog() {
         );
       }
     });
-  };
-
-  // Function to get category color
-  const getCategoryColor = (category) => {
-    const colors = {
-      technology: "bg-blue-100 text-blue-800",
-      design: "bg-purple-100 text-purple-800",
-      travel: "bg-green-100 text-green-800",
-      health: "bg-red-100 text-red-800",
-      business: "bg-amber-100 text-amber-800",
-      food: "bg-emerald-100 text-emerald-800",
-      lifestyle: "bg-pink-100 text-pink-800",
-      fashion: "bg-indigo-100 text-indigo-800",
-      education: "bg-cyan-100 text-cyan-800",
-      sports: "bg-orange-100 text-orange-800",
-      other: "bg-gray-100 text-gray-800",
-    };
-
-    return colors[category?.toLowerCase()] || colors.other;
   };
 
   if (loading) {
