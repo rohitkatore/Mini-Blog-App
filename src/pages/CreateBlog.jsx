@@ -12,6 +12,10 @@ import {
 } from "lucide-react";
 import { addBlog } from "../utils/storage";
 
+/**
+ * CreateBlog component - Form for creating new blog posts
+ * @returns {JSX.Element} CreateBlog component
+ */
 function CreateBlog() {
   const navigate = useNavigate();
   const {
@@ -20,19 +24,11 @@ function CreateBlog() {
     formState: { errors },
   } = useForm();
 
-  const onSubmit = (data) => {
-    // Add blog to localStorage
-    const newBlog = addBlog({
-      ...data,
-      readTime: `${Math.ceil(data.content.length / 1000)} min read`,
-    });
-
-    console.log("New blog created:", newBlog);
-    alert("Blog post created successfully!");
-    navigate(`/post/${newBlog.id}`);
-  };
-
-  const categories = [
+  /**
+   * Blog categories
+   * @constant {Array<string>}
+   */
+  const CATEGORIES = [
     "Technology",
     "Travel",
     "Food",
@@ -44,6 +40,30 @@ function CreateBlog() {
     "Business",
     "Other",
   ];
+
+  /**
+   * Form submission handler
+   * @param {Object} data - Form data
+   */
+  const onSubmit = (data) => {
+    try {
+      // Calculate read time based on content length (1000 chars ~= 1 min)
+      const readTimeMinutes = Math.ceil(data.content.length / 1000);
+
+      // Add blog to localStorage
+      const newBlog = addBlog({
+        ...data,
+        readTime: `${readTimeMinutes} min read`,
+      });
+
+      console.log("New blog created:", newBlog);
+      alert("Blog post created successfully!");
+      navigate(`/post/${newBlog.id}`);
+    } catch (error) {
+      console.error("Error creating blog:", error);
+      alert("Failed to create blog post. Please try again.");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-8 px-4">
@@ -172,7 +192,7 @@ function CreateBlog() {
                     })}
                   >
                     <option value="">Select a category</option>
-                    {categories.map((category, index) => (
+                    {CATEGORIES.map((category, index) => (
                       <option key={index} value={category.toLowerCase()}>
                         {category}
                       </option>

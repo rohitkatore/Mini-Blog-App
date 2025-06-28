@@ -9,6 +9,10 @@ import {
   ChevronRight,
 } from "lucide-react";
 
+/**
+ * CategoriesBlog component - Displays blogs organized by categories
+ * @returns {JSX.Element} CategoriesBlog component
+ */
 function CategoriesBlog() {
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,11 +21,12 @@ function CategoriesBlog() {
   const [searchType, setSearchType] = useState("all"); // Options: "all", "title", "category"
   const [filteredBlogs, setFilteredBlogs] = useState([]);
 
+  // Fetch blogs on component mount
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
         setLoading(true);
-        // Get blogs from localStorage instead of API
+        // Get blogs from localStorage with simulated delay
         setTimeout(() => {
           const storedBlogs = getBlogs();
           setBlogs(storedBlogs);
@@ -71,7 +76,10 @@ function CategoriesBlog() {
     setFilteredBlogs(results);
   }, [searchTerm, searchType, blogs]);
 
-  // Group blogs by category
+  /**
+   * Group blogs by their category
+   * @type {Object} Object with category names as keys and arrays of blogs as values
+   */
   const groupedBlogs = filteredBlogs.reduce((acc, blog) => {
     const category = blog.category || "Uncategorized";
     if (!acc[category]) {
