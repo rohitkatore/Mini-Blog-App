@@ -12,8 +12,16 @@ import {
   ChevronLeft,
   ChevronRight,
   Bookmark,
+  MessageCircle,
 } from "lucide-react";
-import { getBlogById, getBlogs } from "../utils/storage";
+import {
+  getBlogById,
+  getBlogs,
+  addComment,
+  deleteComment,
+} from "../utils/storage";
+import CommentItem from "../components/CommentItem";
+import CommentForm from "../components/CommentForm";
 
 /**
  * ViewBlog component - Displays a single blog post
@@ -194,6 +202,34 @@ function ViewBlog() {
     });
   };
 
+  // Handle adding a new comment
+  const handleAddComment = (commentData) => {
+    try {
+      const updatedBlog = addComment(parseInt(id, 10), commentData);
+      if (updatedBlog) {
+        setBlog(updatedBlog);
+      }
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      alert("Failed to add comment. Please try again.");
+    }
+  };
+
+  // Handle deleting a comment
+  const handleDeleteComment = (commentId) => {
+    if (window.confirm("Are you sure you want to delete this comment?")) {
+      try {
+        const updatedBlog = deleteComment(parseInt(id, 10), commentId);
+        if (updatedBlog) {
+          setBlog(updatedBlog);
+        }
+      } catch (error) {
+        console.error("Error deleting comment:", error);
+        alert("Failed to delete comment. Please try again.");
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
@@ -349,6 +385,41 @@ function ViewBlog() {
                 )
               )}
             </div>
+          </div>
+
+          {/* Comments Section */}
+          <div className="mt-12 border-t border-gray-200 pt-8">
+            <h3 className="text-xl font-bold mb-6 flex items-center text-gray-800">
+              <MessageCircle className="mr-2 h-5 w-5 text-blue-600" />
+              Comments{" "}
+              {blog.comments?.length > 0 && `(${blog.comments.length})`}
+            </h3>
+
+            {/* Comment List */}
+            <div className="mb-8">
+              {!blog.comments || blog.comments.length === 0 ? (
+                <div className="text-center py-8 text-gray-500 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <p>No comments yet. Be the first to share your thoughts!</p>
+                </div>
+              ) : (
+                <div className="space-y-2 divide-y divide-gray-100 dark:divide-gray-800">
+                  {blog.comments.map((comment) => (
+                    <CommentItem
+                      key={comment.id}
+                      comment={comment}
+                      isAuthor={
+                        blog.author.toLowerCase() ===
+                        comment.author.toLowerCase()
+                      }
+                      onDelete={handleDeleteComment}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Comment Form */}
+            <CommentForm onSubmit={handleAddComment} />
           </div>
 
           {/* Blog navigation */}

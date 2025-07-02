@@ -9,6 +9,7 @@ import {
   Filter,
   ChevronRight,
   Bookmark,
+  MessageCircle,
 } from "lucide-react";
 import { getBlogs } from "../utils/storage";
 
@@ -117,10 +118,26 @@ function Home() {
             <div className="mb-6 md:mb-0">
               <div className="flex items-center space-x-3 mb-3">
                 <div className="bg-white p-2 rounded-lg shadow-md">
-                  <BookOpen className="h-7 w-7 text-blue-600" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#2563EB"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-7 w-7"
+                  >
+                    <path
+                      d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z"
+                      fill="#EBF5FF"
+                    />
+                    <path d="M15 5 19 9" />
+                    <path d="M5 15H4a2 2 0 0 0-2 2v1a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-1a2 2 0 0 0-2-2h-1" />
+                  </svg>
                 </div>
                 <h1 className="text-4xl md:text-5xl font-bold">
-                  Mini <span className="text-gradient">Blog</span>
+                  Blog<span className="text-gradient">vio</span>
                 </h1>
               </div>
               <p className="text-gray-600 mt-2 text-lg">
@@ -330,13 +347,21 @@ function Home() {
                           {blog.author}
                         </span>
                       </div>
-                      <Link
-                        to={`/post/${blog.id}`}
-                        className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors flex items-center hover:underline"
-                      >
-                        Read more
-                        <ChevronRight className="h-4 w-4 ml-1" />
-                      </Link>
+                      <div className="flex items-center">
+                        {blog.comments && blog.comments.length > 0 && (
+                          <span className="text-gray-500 text-sm mr-3 flex items-center">
+                            <MessageCircle className="w-4 h-4 mr-1" />
+                            {blog.comments.length}
+                          </span>
+                        )}
+                        <Link
+                          to={`/post/${blog.id}`}
+                          className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors flex items-center hover:underline"
+                        >
+                          Read more
+                          <ChevronRight className="h-4 w-4 ml-1" />
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </div>

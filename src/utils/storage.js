@@ -158,3 +158,72 @@ export const deleteBlog = (id) => {
     return getBlogs();
   }
 };
+
+/**
+ * Add a comment to a blog post
+ * @param {number} blogId - The ID of the blog to comment on
+ * @param {Object} commentData - The comment data (author, content)
+ * @returns {Object|null} The updated blog with new comment or null if blog not found
+ */
+export const addComment = (blogId, commentData) => {
+  try {
+    const blogs = getBlogs();
+    const blogIndex = blogs.findIndex(
+      (blog) => blog.id === parseInt(blogId, 10)
+    );
+
+    if (blogIndex === -1) {
+      return null;
+    }
+
+    // Initialize comments array if it doesn't exist
+    if (!blogs[blogIndex].comments) {
+      blogs[blogIndex].comments = [];
+    }
+
+    const newComment = {
+      id: Date.now(), // Use timestamp as unique ID
+      ...commentData,
+      createdAt: new Date().toISOString(),
+    };
+
+    blogs[blogIndex].comments.push(newComment);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(blogs));
+    return blogs[blogIndex];
+  } catch (error) {
+    console.error(`Error adding comment to blog ${blogId}:`, error);
+    return null;
+  }
+};
+
+/**
+ * Delete a comment from a blog post
+ * @param {number} blogId - The ID of the blog containing the comment
+ * @param {number} commentId - The ID of the comment to delete
+ * @returns {Object|null} The updated blog without the deleted comment or null if not found
+ */
+export const deleteComment = (blogId, commentId) => {
+  try {
+    const blogs = getBlogs();
+    const blogIndex = blogs.findIndex(
+      (blog) => blog.id === parseInt(blogId, 10)
+    );
+
+    if (blogIndex === -1 || !blogs[blogIndex].comments) {
+      return null;
+    }
+
+    blogs[blogIndex].comments = blogs[blogIndex].comments.filter(
+      (comment) => comment.id !== commentId
+    );
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(blogs));
+    return blogs[blogIndex];
+  } catch (error) {
+    console.error(
+      `Error deleting comment ${commentId} from blog ${blogId}:`,
+      error
+    );
+    return null;
+  }
+};
