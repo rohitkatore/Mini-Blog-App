@@ -13,6 +13,10 @@ import {
 } from "lucide-react";
 import { getBlogById, updateBlog, deleteBlog } from "../utils/storage";
 
+/**
+ * EditBlog component - Form for editing existing blog posts
+ * @returns {JSX.Element} EditBlog component
+ */
 function EditBlog() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -26,49 +30,11 @@ function EditBlog() {
     reset,
   } = useForm();
 
-  useEffect(() => {
-    // Fetch blog from localStorage instead of mock API
-    const fetchBlogData = () => {
-      setLoading(true);
-      setTimeout(() => {
-        const foundBlog = getBlogById(parseInt(id));
-        setBlog(foundBlog);
-
-        if (foundBlog) {
-          reset({
-            title: foundBlog.title,
-            content: foundBlog.content,
-            author: foundBlog.author,
-            category: foundBlog.category,
-            coverImage: foundBlog.coverImage,
-          });
-        }
-
-        setLoading(false);
-      }, 300);
-    };
-
-    fetchBlogData();
-  }, [id, reset]);
-
-  const onSubmit = (data) => {
-    // Update blog in localStorage
-    const updatedBlog = updateBlog(parseInt(id), data);
-    console.log("Updated blog:", updatedBlog);
-    alert("Blog post updated successfully!");
-    navigate(`/post/${id}`);
-  };
-
-  const handleDelete = () => {
-    if (window.confirm("Are you sure you want to delete this blog post?")) {
-      // Delete from localStorage
-      deleteBlog(parseInt(id));
-      alert("Blog post deleted successfully!");
-      navigate("/");
-    }
-  };
-
-  const categories = [
+  /**
+   * Blog categories
+   * @constant {Array<string>}
+   */
+  const CATEGORIES = [
     "Technology",
     "Travel",
     "Food",
@@ -80,6 +46,72 @@ function EditBlog() {
     "Business",
     "Other",
   ];
+
+  // Fetch blog data on component mount
+  useEffect(() => {
+    const fetchBlogData = () => {
+      setLoading(true);
+
+      // Simulate API delay with setTimeout
+      setTimeout(() => {
+        try {
+          const foundBlog = getBlogById(parseInt(id, 10));
+          setBlog(foundBlog);
+
+          if (foundBlog) {
+            // Pre-populate form with existing blog data
+            reset({
+              title: foundBlog.title,
+              content: foundBlog.content,
+              author: foundBlog.author,
+              category: foundBlog.category,
+              coverImage: foundBlog.coverImage,
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching blog:", error);
+        } finally {
+          setLoading(false);
+        }
+      }, 300);
+    };
+
+    fetchBlogData();
+  }, [id, reset]);
+
+  /**
+   * Form submission handler
+   * @param {Object} data - Form data
+   */
+  const onSubmit = (data) => {
+    try {
+      // Update blog in localStorage
+      const updatedBlog = updateBlog(parseInt(id, 10), data);
+      console.log("Updated blog:", updatedBlog);
+      alert("Blog post updated successfully!");
+      navigate(`/post/${id}`);
+    } catch (error) {
+      console.error("Error updating blog:", error);
+      alert("Failed to update blog post. Please try again.");
+    }
+  };
+
+  /**
+   * Delete confirmation and handler
+   */
+  const handleDelete = () => {
+    if (window.confirm("Are you sure you want to delete this blog post?")) {
+      try {
+        // Delete from localStorage
+        deleteBlog(parseInt(id, 10));
+        alert("Blog post deleted successfully!");
+        navigate("/");
+      } catch (error) {
+        console.error("Error deleting blog:", error);
+        alert("Failed to delete blog post. Please try again.");
+      }
+    }
+  };
 
   if (loading) {
     return (
@@ -250,7 +282,7 @@ function EditBlog() {
                     })}
                   >
                     <option value="">Select a category</option>
-                    {categories.map((category, index) => (
+                    {CATEGORIES.map((category, index) => (
                       <option key={index} value={category.toLowerCase()}>
                         {category}
                       </option>

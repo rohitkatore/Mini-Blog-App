@@ -12,9 +12,21 @@ import {
   ChevronLeft,
   ChevronRight,
   Bookmark,
+  MessageCircle,
 } from "lucide-react";
-import { getBlogById, getBlogs } from "../utils/storage";
+import {
+  getBlogById,
+  getBlogs,
+  addComment,
+  deleteComment,
+} from "../utils/storage";
+import CommentItem from "../components/CommentItem";
+import CommentForm from "../components/CommentForm";
 
+/**
+ * ViewBlog component - Displays a single blog post
+ * @returns {JSX.Element} ViewBlog component
+ */
 function ViewBlog() {
   const { id } = useParams();
   const [blog, setBlog] = useState(null);
@@ -22,44 +34,86 @@ function ViewBlog() {
   const [nextPrev, setNextPrev] = useState({ next: null, prev: null });
   const [copied, setCopied] = useState(false);
 
+  // Fetch blog data on component mount or id change
   useEffect(() => {
-    // Get blog from localStorage
     const fetchBlog = () => {
       setLoading(true);
+
+      // Simulate API delay
       setTimeout(() => {
-        const allBlogs = getBlogs();
-        const foundBlog = getBlogById(parseInt(id));
-        setBlog(foundBlog);
+        try {
+          const allBlogs = getBlogs();
+          const foundBlog = getBlogById(parseInt(id, 10));
+          setBlog(foundBlog);
 
-        // Find next and previous blogs for navigation
-        if (foundBlog) {
-          const currentIndex = allBlogs.findIndex((b) => b.id === foundBlog.id);
-          setNextPrev({
-            prev: currentIndex > 0 ? allBlogs[currentIndex - 1] : null,
-            next:
-              currentIndex < allBlogs.length - 1
-                ? allBlogs[currentIndex + 1]
-                : null,
-          });
+          // Find next and previous blogs for navigation
+          if (foundBlog) {
+            const currentIndex = allBlogs.findIndex(
+              (b) => b.id === foundBlog.id
+            );
+            setNextPrev({
+              prev: currentIndex > 0 ? allBlogs[currentIndex - 1] : null,
+              next:
+                currentIndex < allBlogs.length - 1
+                  ? allBlogs[currentIndex + 1]
+                  : null,
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching blog:", error);
+        } finally {
+          setLoading(false);
         }
-
-        setLoading(false);
       }, 300);
     };
 
     fetchBlog();
   }, [id]);
 
+  /**
+   * Copy current URL to clipboard for sharing
+   */
   const shareUrl = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error("Failed to copy URL:", error);
+    }
   };
 
-  // Format date to be more readable
+  /**
+   * Format date to be more readable
+   * @param {string} dateString - ISO date string
+   * @returns {string} Formatted date
+   */
   const formatDate = (dateString) => {
     const options = { year: "numeric", month: "long", day: "numeric" };
     return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
+  /**
+   * Function to get category color
+   * @param {string} category - Blog category
+   * @returns {string} CSS classes for category styling
+   */
+  const getCategoryColor = (category) => {
+    const colors = {
+      technology: "bg-blue-100 text-blue-800",
+      design: "bg-purple-100 text-purple-800",
+      travel: "bg-green-100 text-green-800",
+      health: "bg-red-100 text-red-800",
+      business: "bg-amber-100 text-amber-800",
+      food: "bg-emerald-100 text-emerald-800",
+      lifestyle: "bg-pink-100 text-pink-800",
+      fashion: "bg-indigo-100 text-indigo-800",
+      education: "bg-cyan-100 text-cyan-800",
+      sports: "bg-orange-100 text-orange-800",
+      other: "bg-gray-100 text-gray-800",
+    };
+
+    return colors[category?.toLowerCase()] || colors.other;
   };
 
   // Function to render markdown-like content with proper formatting
@@ -148,23 +202,32 @@ function ViewBlog() {
     });
   };
 
-  // Function to get category color
-  const getCategoryColor = (category) => {
-    const colors = {
-      technology: "bg-blue-100 text-blue-800",
-      design: "bg-purple-100 text-purple-800",
-      travel: "bg-green-100 text-green-800",
-      health: "bg-red-100 text-red-800",
-      business: "bg-amber-100 text-amber-800",
-      food: "bg-emerald-100 text-emerald-800",
-      lifestyle: "bg-pink-100 text-pink-800",
-      fashion: "bg-indigo-100 text-indigo-800",
-      education: "bg-cyan-100 text-cyan-800",
-      sports: "bg-orange-100 text-orange-800",
-      other: "bg-gray-100 text-gray-800",
-    };
+  // Handle adding a new comment
+  const handleAddComment = (commentData) => {
+    try {
+      const updatedBlog = addComment(parseInt(id, 10), commentData);
+      if (updatedBlog) {
+        setBlog(updatedBlog);
+      }
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      alert("Failed to add comment. Please try again.");
+    }
+  };
 
-    return colors[category?.toLowerCase()] || colors.other;
+  // Handle deleting a comment
+  const handleDeleteComment = (commentId) => {
+    if (window.confirm("Are you sure you want to delete this comment?")) {
+      try {
+        const updatedBlog = deleteComment(parseInt(id, 10), commentId);
+        if (updatedBlog) {
+          setBlog(updatedBlog);
+        }
+      } catch (error) {
+        console.error("Error deleting comment:", error);
+        alert("Failed to delete comment. Please try again.");
+      }
+    }
   };
 
   if (loading) {
@@ -322,6 +385,41 @@ function ViewBlog() {
                 )
               )}
             </div>
+          </div>
+
+          {/* Comments Section */}
+          <div className="mt-12 border-t border-gray-200 pt-8">
+            <h3 className="text-xl font-bold mb-6 flex items-center text-gray-800">
+              <MessageCircle className="mr-2 h-5 w-5 text-blue-600" />
+              Comments{" "}
+              {blog.comments?.length > 0 && `(${blog.comments.length})`}
+            </h3>
+
+            {/* Comment List */}
+            <div className="mb-8">
+              {!blog.comments || blog.comments.length === 0 ? (
+                <div className="text-center py-8 text-gray-500 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <p>No comments yet. Be the first to share your thoughts!</p>
+                </div>
+              ) : (
+                <div className="space-y-2 divide-y divide-gray-100 dark:divide-gray-800">
+                  {blog.comments.map((comment) => (
+                    <CommentItem
+                      key={comment.id}
+                      comment={comment}
+                      isAuthor={
+                        blog.author.toLowerCase() ===
+                        comment.author.toLowerCase()
+                      }
+                      onDelete={handleDeleteComment}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Comment Form */}
+            <CommentForm onSubmit={handleAddComment} />
           </div>
 
           {/* Blog navigation */}

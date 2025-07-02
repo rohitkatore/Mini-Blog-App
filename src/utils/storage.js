@@ -1,6 +1,13 @@
+/**
+ * Storage key used for blog posts in localStorage
+ * @constant {string}
+ */
 const STORAGE_KEY = "mini_blog_posts";
 
-// Sample initial blog data
+/**
+ * Sample initial blog data for first-time app usage
+ * @constant {Array}
+ */
 const initialBlogs = [
   {
     id: 1,
@@ -58,11 +65,16 @@ const initializeStorage = () => {
  * @returns {Array} Array of blog objects
  */
 export const getBlogs = () => {
-  const blogs = localStorage.getItem(STORAGE_KEY);
-  if (!blogs) {
-    return initializeStorage();
+  try {
+    const blogs = localStorage.getItem(STORAGE_KEY);
+    if (!blogs) {
+      return initializeStorage();
+    }
+    return JSON.parse(blogs);
+  } catch (error) {
+    console.error("Error retrieving blogs from storage:", error);
+    return [];
   }
-  return JSON.parse(blogs);
 };
 
 /**
@@ -71,8 +83,13 @@ export const getBlogs = () => {
  * @returns {Object|undefined} The blog object or undefined if not found
  */
 export const getBlogById = (id) => {
-  const blogs = getBlogs();
-  return blogs.find((blog) => blog.id === parseInt(id));
+  try {
+    const blogs = getBlogs();
+    return blogs.find((blog) => blog.id === parseInt(id, 10));
+  } catch (error) {
+    console.error(`Error retrieving blog with ID ${id}:`, error);
+    return undefined;
+  }
 };
 
 /**
@@ -81,20 +98,25 @@ export const getBlogById = (id) => {
  * @returns {Object} The new blog with generated ID
  */
 export const addBlog = (blog) => {
-  const blogs = getBlogs();
-  // Generate a new ID
-  const newId =
-    blogs.length > 0 ? Math.max(...blogs.map((blog) => blog.id)) + 1 : 1;
+  try {
+    const blogs = getBlogs();
+    // Generate a new ID
+    const newId =
+      blogs.length > 0 ? Math.max(...blogs.map((blog) => blog.id)) + 1 : 1;
 
-  const newBlog = {
-    ...blog,
-    id: newId,
-    createdAt: new Date().toISOString().split("T")[0],
-  };
+    const newBlog = {
+      ...blog,
+      id: newId,
+      createdAt: new Date().toISOString().split("T")[0],
+    };
 
-  const updatedBlogs = [...blogs, newBlog];
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedBlogs));
-  return newBlog;
+    const updatedBlogs = [...blogs, newBlog];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedBlogs));
+    return newBlog;
+  } catch (error) {
+    console.error("Error adding new blog:", error);
+    throw new Error("Failed to add blog");
+  }
 };
 
 /**
@@ -104,15 +126,20 @@ export const addBlog = (blog) => {
  * @returns {Object|null} The updated blog or null if not found
  */
 export const updateBlog = (id, updatedBlog) => {
-  const blogs = getBlogs();
-  const index = blogs.findIndex((blog) => blog.id === parseInt(id));
+  try {
+    const blogs = getBlogs();
+    const index = blogs.findIndex((blog) => blog.id === parseInt(id, 10));
 
-  if (index !== -1) {
-    blogs[index] = { ...blogs[index], ...updatedBlog };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(blogs));
-    return blogs[index];
+    if (index !== -1) {
+      blogs[index] = { ...blogs[index], ...updatedBlog };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(blogs));
+      return blogs[index];
+    }
+    return null;
+  } catch (error) {
+    console.error(`Error updating blog with ID ${id}:`, error);
+    return null;
   }
-  return null;
 };
 
 /**
@@ -121,8 +148,82 @@ export const updateBlog = (id, updatedBlog) => {
  * @returns {Array} The updated blogs array
  */
 export const deleteBlog = (id) => {
-  const blogs = getBlogs();
-  const filteredBlogs = blogs.filter((blog) => blog.id !== parseInt(id));
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(filteredBlogs));
-  return filteredBlogs;
+  try {
+    const blogs = getBlogs();
+    const filteredBlogs = blogs.filter((blog) => blog.id !== parseInt(id, 10));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(filteredBlogs));
+    return filteredBlogs;
+  } catch (error) {
+    console.error(`Error deleting blog with ID ${id}:`, error);
+    return getBlogs();
+  }
+};
+
+/**
+ * Add a comment to a blog post
+ * @param {number} blogId - The ID of the blog to comment on
+ * @param {Object} commentData - The comment data (author, content)
+ * @returns {Object|null} The updated blog with new comment or null if blog not found
+ */
+export const addComment = (blogId, commentData) => {
+  try {
+    const blogs = getBlogs();
+    const blogIndex = blogs.findIndex(
+      (blog) => blog.id === parseInt(blogId, 10)
+    );
+
+    if (blogIndex === -1) {
+      return null;
+    }
+
+    // Initialize comments array if it doesn't exist
+    if (!blogs[blogIndex].comments) {
+      blogs[blogIndex].comments = [];
+    }
+
+    const newComment = {
+      id: Date.now(), // Use timestamp as unique ID
+      ...commentData,
+      createdAt: new Date().toISOString(),
+    };
+
+    blogs[blogIndex].comments.push(newComment);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(blogs));
+    return blogs[blogIndex];
+  } catch (error) {
+    console.error(`Error adding comment to blog ${blogId}:`, error);
+    return null;
+  }
+};
+
+/**
+ * Delete a comment from a blog post
+ * @param {number} blogId - The ID of the blog containing the comment
+ * @param {number} commentId - The ID of the comment to delete
+ * @returns {Object|null} The updated blog without the deleted comment or null if not found
+ */
+export const deleteComment = (blogId, commentId) => {
+  try {
+    const blogs = getBlogs();
+    const blogIndex = blogs.findIndex(
+      (blog) => blog.id === parseInt(blogId, 10)
+    );
+
+    if (blogIndex === -1 || !blogs[blogIndex].comments) {
+      return null;
+    }
+
+    blogs[blogIndex].comments = blogs[blogIndex].comments.filter(
+      (comment) => comment.id !== commentId
+    );
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(blogs));
+    return blogs[blogIndex];
+  } catch (error) {
+    console.error(
+      `Error deleting comment ${commentId} from blog ${blogId}:`,
+      error
+    );
+    return null;
+  }
 };
